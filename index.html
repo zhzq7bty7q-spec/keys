@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Keys">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14171c" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Keys</title>
+<style>
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --text:#1d2330; --muted:#687083;
+  --border:#dde1e8; --border-strong:#c6ccd6;
+  --accent:#2f6fd6; --accent-bg:#e8f0fc; --accent-text:#1f56b0; --accent-border:#b7cdf3;
+  --ok:#1f8a4c; --bad:#c43c3c;
+  --white-key:#ffffff; --white-key-down:#e6eaf1; --black-key:#23272f; --black-key-down:#454c59;
+  --key-border:#c9ced8; --hl:#4a86e8; --hl-root:#1f56b0;
+  --inscale:#dde8fb; --inscale-black:#3a5482;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14171c; --surface:#1c2028; --text:#e7eaf0; --muted:#98a0b0;
+    --border:#2a2f39; --border-strong:#3a404c;
+    --accent:#6fa0f0; --accent-bg:#1e2b42; --accent-text:#a9c6f7; --accent-border:#2f4a78;
+    --ok:#4cb87c; --bad:#e06a6a;
+    --white-key:#e8eaee; --white-key-down:#c9cfd9; --black-key:#0c0e12; --black-key-down:#30353f;
+    --key-border:#8f97a5; --hl:#4a86e8; --hl-root:#2a5fbf;
+    --inscale:#c4d5f3; --inscale-black:#2b3f63;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14171c; --surface:#1c2028; --text:#e7eaf0; --muted:#98a0b0;
+  --border:#2a2f39; --border-strong:#3a404c;
+  --accent:#6fa0f0; --accent-bg:#1e2b42; --accent-text:#a9c6f7; --accent-border:#2f4a78;
+  --ok:#4cb87c; --bad:#e06a6a;
+  --white-key:#e8eaee; --white-key-down:#c9cfd9; --black-key:#0c0e12; --black-key-down:#30353f;
+  --key-border:#8f97a5; --hl:#4a86e8; --hl-root:#2a5fbf;
+  --inscale:#c4d5f3; --inscale-black:#2b3f63;
+  color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+.app{height:100%;display:flex;flex-direction:column;max-width:1100px;margin:0 auto;padding:14px max(16px,env(safe-area-inset-right,0px)) 14px max(16px,env(safe-area-inset-left,0px))}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+h1{font-size:21px;font-weight:600;margin:0;letter-spacing:-0.01em}
+.panel{flex:1 1 auto;min-height:0;overflow:auto}
+.card{background:var(--surface);border:0.5px solid var(--border-strong);border-radius:14px;padding:16px 18px}
+[hidden]{display:none!important}
+
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{font-size:15px;padding:9px 16px;min-height:40px;border-radius:10px;border:0.5px solid var(--border-strong);background:var(--surface);color:var(--text)}
+.btn.primary{background:var(--accent-bg);color:var(--accent-text);border-color:var(--accent-border);font-weight:500}
+.btn:disabled{opacity:.4;cursor:default}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.seg,.tabs{display:inline-flex;gap:2px;padding:3px;border-radius:10px;border:0.5px solid var(--border-strong);background:var(--bg)}
+.seg button,.tabs button{border:0;background:transparent;color:var(--muted);font-size:14px;padding:7px 12px;border-radius:7px;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:0 0 0 0.5px var(--border-strong)}
+.tabs{background:var(--surface)}
+.tabs button[aria-selected="true"]{background:var(--accent-bg);color:var(--accent-text);font-weight:500}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.toolbar.sub{margin-top:12px}
+.check{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.check input{width:18px;height:18px;accent-color:var(--accent)}
+.select{font:inherit;font-size:15px;padding:7px 10px;min-height:38px;border-radius:10px;border:0.5px solid var(--border-strong);background:var(--surface);color:var(--text)}
+
+.roots{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;margin:14px 0}
+@media (max-width:640px){.roots{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.root{font-size:15px;padding:8px 0;border-radius:8px;border:0.5px solid var(--border);background:var(--surface);color:var(--text)}
+.root[aria-pressed="true"]{background:var(--accent-bg);color:var(--accent-text);border-color:var(--accent-border);font-weight:600}
+
+.result{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.big{font-size:26px;font-weight:600;min-height:32px;letter-spacing:-0.01em}
+.notes{font-size:17px;color:var(--muted);margin-top:2px;word-spacing:.4em;min-height:22px}
+.small{font-size:13px;color:var(--muted);margin-top:4px}
+.hint{font-size:14px;color:var(--muted);margin:14px 0 10px}
+
+.ear{display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px 0 12px}
+.verdict{font-size:46px;line-height:56px;height:56px;font-weight:600}
+.verdict.ok{color:var(--ok)} .verdict.bad{color:var(--bad)}
+.dots{display:flex;gap:10px;margin:4px 0 8px;min-height:16px}
+.dot{width:15px;height:15px;border-radius:50%;border:1.5px solid var(--border-strong)}
+.dot.on{background:var(--accent);border-color:var(--accent)}
+.dot.bad{background:var(--bad);border-color:var(--bad)}
+.msg{font-size:15px;color:var(--muted);min-height:22px;margin-top:4px}
+.ear-actions{justify-content:center}
+.answers{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px;margin:4px 0 14px}
+.ans{font-size:15px;padding:10px 6px;border-radius:9px;border:0.5px solid var(--border-strong);background:var(--surface);color:var(--text)}
+.ans.wrong{border-color:var(--bad);color:var(--bad)}
+.ans.right{background:var(--ok);border-color:var(--ok);color:#fff}
+
+.kb-scroll{flex:0 0 auto;margin-top:12px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;background:var(--surface);border:0.5px solid var(--border-strong);border-radius:14px;padding:8px}
+.kb{position:relative;height:clamp(150px,32vh,290px);min-width:480px;touch-action:pan-x;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.key{position:absolute;top:0;display:flex;align-items:flex-end;justify-content:center;font-weight:600;transition:background-color .12s,color .12s}
+.key.white{height:100%;background:var(--white-key);border:1px solid var(--key-border);border-left-width:0;border-radius:0 0 7px 7px;color:var(--muted);font-size:14px;padding-bottom:12px;z-index:1}
+.key.white.first{border-left-width:1px}
+.key.black{height:62%;background:var(--black-key);border-radius:0 0 5px 5px;color:#fff;font-size:11px;padding-bottom:8px;z-index:2}
+.key .lbl.faint{opacity:.55;font-weight:500}
+.key.white.inscale{background:var(--inscale);color:var(--accent-text)}
+.key.black.inscale{background:var(--inscale-black)}
+.key.hl,.key.sel{background:var(--hl);color:#fff}
+.key.hl.root{background:var(--hl-root)}
+.key.ok{background:var(--ok)!important;color:#fff}
+.key.bad{background:var(--bad)!important;color:#fff}
+.key.start{box-shadow:inset 0 0 0 3px var(--accent);color:var(--accent-text)}
+.key.black.start{color:#fff}
+.key.white.down:not(.hl):not(.sel):not(.ok):not(.bad){background:var(--white-key-down)}
+.key.black.down:not(.hl):not(.sel):not(.ok):not(.bad){background:var(--black-key-down)}
+@media (prefers-reduced-motion: reduce){.key{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Keys</h1>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="chords">Chords</button>
+      <button role="tab" data-tab="scales">Scales</button>
+      <button role="tab" data-tab="ear">Ear training</button>
+    </nav>
+  </header>
+
+  <main class="panel">
+    <!-- CHORDS -->
+    <section class="view" id="view-chords">
+      <div class="card">
+        <div class="toolbar">
+          <div class="seg" data-key="chordMode"><button data-v="show">Show chord</button><button data-v="name">Name chord</button></div>
+          <div class="seg" data-key="chordQ" id="chordQSeg"><button data-v="major">Major</button><button data-v="minor">Minor</button></div>
+        </div>
+        <div id="chordShowBox">
+          <div class="toolbar sub">
+            <div class="seg" data-key="chordInv"><button data-v="0">Root position</button><button data-v="1">1st inversion</button><button data-v="2">2nd inversion</button></div>
+          </div>
+          <div class="roots" id="chordRoots"></div>
+          <div class="result">
+            <div><div class="big" id="chordName"></div><div class="notes" id="chordNotes"></div></div>
+            <button class="btn primary" id="chordPlay">Play</button>
+          </div>
+        </div>
+        <div id="chordNameBox" hidden>
+          <p class="hint">Tap keys to select them, tap again to release.</p>
+          <div class="result">
+            <div><div class="big" id="idName"></div><div class="notes" id="idNotes"></div><div class="small" id="idInv"></div></div>
+            <div class="btns"><button class="btn primary" id="idPlay">Play</button><button class="btn" id="idClear">Clear</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCALES -->
+    <section class="view" id="view-scales" hidden>
+      <div class="card">
+        <div class="toolbar">
+          <div class="seg" data-key="scaleQ"><button data-v="major">Major</button><button data-v="minor">Minor</button></div>
+        </div>
+        <div class="roots" id="scaleRoots"></div>
+        <div class="result">
+          <div><div class="big" id="scaleName"></div><div class="notes" id="scaleNotes"></div></div>
+          <button class="btn primary" id="scalePlay">Play</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- EAR TRAINING -->
+    <section class="view" id="view-ear" hidden>
+      <div class="card">
+        <div class="toolbar">
+          <div class="seg" data-key="earType"><button data-v="intervals">Intervals</button><button data-v="melodies">Melodies</button></div>
+        </div>
+
+        <div id="intBox">
+          <div class="toolbar sub">
+            <div class="seg" data-key="intMode"><button data-v="name">Name it</button><button data-v="play">Play it</button></div>
+            <div class="seg" data-key="intDir"><button data-v="up">Up</button><button data-v="down">Down</button><button data-v="mixed">Mixed</button></div>
+            <div class="seg" data-key="intSet"><button data-v="basic">Basic</button><button data-v="all">All</button></div>
+          </div>
+          <div class="ear">
+            <div class="verdict" id="intVerdict" aria-live="polite"></div>
+            <div class="big" id="intName"></div>
+            <div class="msg" id="intMsg"></div>
+          </div>
+          <div class="answers" id="intAnswers"></div>
+          <div class="btns ear-actions">
+            <button class="btn primary" id="intNew">New interval</button>
+            <button class="btn" id="intAgain" disabled>Listen again</button>
+            <button class="btn" id="intReveal" disabled>Show answer</button>
+          </div>
+        </div>
+
+        <div id="melBox" hidden>
+          <div class="toolbar sub">
+            <select class="select" id="melKey" aria-label="Key"></select>
+            <div class="seg" data-key="melRange"><button data-v="1">Steps 1–3</button><button data-v="2">1–5</button><button data-v="3">Full scale</button></div>
+            <div class="seg" data-key="earLen"><button data-v="3">3 notes</button><button data-v="4">4 notes</button></div>
+          </div>
+          <div class="toolbar sub">
+            <label class="check"><input type="checkbox" id="melFirst"> Show first note</label>
+            <label class="check"><input type="checkbox" id="melScale"> Highlight scale</label>
+          </div>
+          <div class="ear">
+            <div class="verdict" id="melVerdict" aria-live="polite"></div>
+            <div class="dots" id="melDots"></div>
+            <div class="big" id="melDeg"></div>
+            <div class="notes" id="melNotes"></div>
+            <div class="msg" id="melMsg"></div>
+          </div>
+          <div class="btns ear-actions">
+            <button class="btn primary" id="melNew">New melody</button>
+            <button class="btn" id="melAgain" disabled>Listen again</button>
+            <button class="btn" id="melHearKey">Hear key</button>
+            <button class="btn" id="melReveal" disabled>Show answer</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="kb-scroll" id="kbScroll"><div class="kb" id="kb"></div></div>
+</div>
+
+<script>
+(function(){
+const $ = s => document.querySelector(s);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const rand = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+
+/* ---------- state ---------- */
+const STORE = 'keys-app-v2';
+const S = Object.assign({
+  tab:'chords', chordMode:'show', chordQ:'major', chordRoot:0, chordInv:0, scaleQ:'major', scaleRoot:0,
+  earType:'intervals', intMode:'name', intDir:'up', intSet:'basic',
+  melRoot:0, melQ:'major', melRange:1, earLen:3, melFirst:true, melScale:true
+}, load());
+function load(){ try{ return JSON.parse(localStorage.getItem(STORE)) || {}; }catch(e){ return {}; } }
+function save(){ try{ localStorage.setItem(STORE, JSON.stringify(S)); }catch(e){} }
+
+/* ---------- music theory ---------- */
+const NAMES_MAJOR = ['C','Db','D','Eb','E','F','F#','G','Ab','A','Bb','B'];
+const NAMES_MINOR = ['C','C#','D','Eb','E','F','F#','G','G#','A','Bb','B'];
+const LETTERS = 'CDEFGAB', LPC = [0,2,4,5,7,9,11];
+const CHORD = { major:[[0,0],[2,4],[4,7]], minor:[[0,0],[2,3],[4,7]] };
+const SCALE = { major:[0,2,4,5,7,9,11,12], minor:[0,2,3,5,7,8,10,12] };
+const pretty = n => n[0] + n.slice(1).replace('##','𝄪').replace('bb','𝄫').replace('#','♯').replace('b','♭');
+function pcOf(name){ let pc = LPC[LETTERS.indexOf(name[0])]; for (const c of name.slice(1)) pc += c === '#' ? 1 : -1; return (pc % 12 + 12) % 12; }
+function spell(root, steps){
+  const li = LETTERS.indexOf(root[0]), rpc = pcOf(root);
+  return steps.map(([ls, st]) => {
+    const L = LETTERS[(li + ls) % 7];
+    let d = (((rpc + st) - LPC[LETTERS.indexOf(L)]) % 12 + 12) % 12;
+    if (d > 6) d -= 12;
+    return L + (d > 0 ? '#'.repeat(d) : 'b'.repeat(-d));
+  });
+}
+const rootNames = q => q === 'major' ? NAMES_MAJOR : NAMES_MINOR;
+const noteName = m => pretty(NAMES_MAJOR[m % 12]);
+const scaleSteps = q => SCALE[q].map((s, i) => [i, s]);
+
+/* ---------- audio ---------- */
+let ctx = null, master = null, voices = [];
+function ensureAudio(){
+  if (!ctx){
+    try{ if (navigator.audioSession) navigator.audioSession.type = 'playback'; }catch(e){}
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return false;
+    ctx = new AC();
+    master = ctx.createGain(); master.gain.value = 0.55;
+    const comp = ctx.createDynamicsCompressor();
+    master.connect(comp); comp.connect(ctx.destination);
+    try{ const b = ctx.createBuffer(1, 1, 22050), src = ctx.createBufferSource(); src.buffer = b; src.connect(ctx.destination); src.start(0); }catch(e){}
+  }
+  if (ctx.state !== 'running') ctx.resume();
+  return true;
+}
+// unlock audio inside every user gesture (iOS requirement)
+['pointerdown','touchend','click','keydown'].forEach(ev => document.addEventListener(ev, ensureAudio, { capture:true, passive:true }));
+
+function playNote(midi, dur = 1.4, vel = 1, when = 0){
+  if (!ensureAudio()) return;
+  const t = ctx.currentTime + 0.02 + when;
+  const f = 440 * Math.pow(2, (midi - 69) / 12);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(0.32 * vel, t + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.11 * vel, t + 0.28);
+  g.gain.exponentialRampToValueAtTime(0.0006, t + dur);
+  const lp = ctx.createBiquadFilter(); lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(Math.min(9000, f * 9), t);
+  lp.frequency.exponentialRampToValueAtTime(Math.max(500, f * 2.2), t + dur * 0.8);
+  lp.connect(g); g.connect(master);
+  const v = { t, oscs:[] };
+  [[1,'triangle',1],[2,'sine',0.35],[3,'sine',0.12],[4,'sine',0.05]].forEach(([h, type, amp]) => {
+    const o = ctx.createOscillator(), og = ctx.createGain();
+    o.type = type; o.frequency.value = f * h; og.gain.value = amp;
+    o.connect(og); og.connect(lp); o.start(t); o.stop(t + dur + 0.05);
+    v.oscs.push(o);
+  });
+  v.oscs[0].onended = () => { voices = voices.filter(x => x !== v); };
+  voices.push(v);
+}
+let timers = [];
+const at = (sec, fn) => timers.push(setTimeout(fn, sec * 1000));
+function cancelAll(){
+  timers.forEach(clearTimeout); timers = [];
+  if (ctx){ const now = ctx.currentTime; voices.forEach(v => { if (v.t > now + 0.005) v.oscs.forEach(o => { try{ o.stop(0); }catch(e){} }); }); }
+}
+
+/* ---------- keyboard ---------- */
+const LOW = 60, HIGH = 84; // C4 to C6
+const BLACK = new Set([1,3,6,8,10]);
+const kb = $('#kb'), keyEl = {};
+(function buildKeyboard(){
+  const whites = [];
+  for (let m = LOW; m <= HIGH; m++) if (!BLACK.has(m % 12)) whites.push(m);
+  const W = whites.length, bw = 0.6 / W;
+  let wi = -1;
+  for (let m = LOW; m <= HIGH; m++){
+    const k = document.createElement('div');
+    const black = BLACK.has(m % 12);
+    k.className = 'key ' + (black ? 'black' : 'white');
+    k.dataset.m = m;
+    const lbl = document.createElement('span'); lbl.className = 'lbl'; k.appendChild(lbl);
+    if (black){
+      k.style.left = ((wi + 1) / W - bw / 2) * 100 + '%';
+      k.style.width = bw * 100 + '%';
+    } else {
+      wi++;
+      if (wi === 0) k.classList.add('first');
+      k.style.left = wi / W * 100 + '%';
+      k.style.width = 100 / W + '%';
+    }
+    kb.appendChild(k); keyEl[m] = k;
+  }
+})();
+function setLabel(m, text, faint){ const l = keyEl[m].firstChild; l.textContent = text; l.className = 'lbl' + (faint ? ' faint' : ''); }
+function clearKeys(){
+  for (const m in keyEl){
+    keyEl[m].classList.remove('hl','root','sel','start','ok','bad','inscale');
+    setLabel(+m, +m % 12 === 0 ? 'C' : '', true);
+  }
+}
+function setKey(m, cls, label){
+  const k = keyEl[m]; if (!k) return;
+  cls.split(' ').filter(Boolean).forEach(c => k.classList.add(c));
+  if (label !== undefined) setLabel(m, label, false);
+}
+function flash(m, cls, ms = 380){ const k = keyEl[m]; if (!k) return; k.classList.add(cls); setTimeout(() => k.classList.remove(cls), ms); }
+function scrollToKeys(ms){
+  const sc = $('#kbScroll'); if (sc.scrollWidth <= sc.clientWidth + 2 || !ms.length) return;
+  const a = keyEl[Math.min(...ms)], b = keyEl[Math.max(...ms)];
+  const mid = (a.offsetLeft + b.offsetLeft + b.offsetWidth) / 2;
+  sc.scrollTo({ left: mid - sc.clientWidth / 2, behavior: 'smooth' });
+}
+kb.addEventListener('pointerdown', e => {
+  const k = e.target.closest('.key'); if (!k) return;
+  e.preventDefault();
+  if (S.tab === 'ear' && earBusy()) return;
+  const m = +k.dataset.m;
+  k.classList.add('down');
+  playNote(m);
+  onKey(m);
+});
+const releaseAll = () => document.querySelectorAll('.key.down').forEach(k => k.classList.remove('down'));
+window.addEventListener('pointerup', releaseAll);
+window.addEventListener('pointercancel', releaseAll);
+kb.addEventListener('contextmenu', e => e.preventDefault());
+
+function onKey(m){
+  if (S.tab === 'chords' && S.chordMode === 'name'){ sel.has(m) ? sel.delete(m) : sel.add(m); renderIdentify(); }
+  else if (S.tab === 'ear') S.earType === 'intervals' ? intKey(m) : melKey(m);
+}
+const earBusy = () => (S.earType === 'intervals' ? iv.status : mel.status) === 'playing';
+
+/* ---------- shared UI ---------- */
+function setVerdict(el, v){ el.className = 'verdict' + (v ? ' ' + v : ''); el.textContent = v === 'ok' ? '✓' : v === 'bad' ? '✗' : ''; }
+function renderRoots(el, names, current, onPick){
+  el.innerHTML = '';
+  names.forEach((n, pc) => {
+    const b = document.createElement('button');
+    b.className = 'root'; b.textContent = pretty(n);
+    b.setAttribute('aria-pressed', pc === current);
+    b.addEventListener('click', () => onPick(pc));
+    el.appendChild(b);
+  });
+}
+function syncSegs(){
+  document.querySelectorAll('.seg[data-key]').forEach(seg => {
+    seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(S[seg.dataset.key]) === b.dataset.v));
+  });
+}
+document.querySelectorAll('.seg[data-key]').forEach(seg => {
+  seg.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const key = seg.dataset.key, v = isNaN(+b.dataset.v) ? b.dataset.v : +b.dataset.v;
+    if (S[key] === v) return;
+    S[key] = v; save(); syncSegs();
+    if (key === 'chordMode' || key === 'earType') renderView();
+    else if (key === 'chordQ' || key === 'chordInv'){ renderChordShow(); playChord(chordMidis()); }
+    else if (key === 'scaleQ') renderScale();
+    else if (key === 'intMode' || key === 'intDir' || key === 'intSet'){ resetInt(); renderInt(); }
+    else if (key === 'melRange' || key === 'earLen'){ resetMel(); renderMel(); }
+  });
+});
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => { S.tab = b.dataset.tab; save(); renderView(); }));
+
+function renderView(){
+  cancelAll();
+  if (iv.status === 'playing') iv.status = iv.s ? 'answer' : 'idle';
+  if (mel.status === 'playing' || mel.status === 'wait') mel.status = mel.mid.length ? 'input' : 'idle';
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === S.tab));
+  ['chords','scales','ear'].forEach(t => $('#view-' + t).hidden = t !== S.tab);
+  syncSegs();
+  clearKeys();
+  if (S.tab === 'chords'){
+    const show = S.chordMode === 'show';
+    $('#chordShowBox').hidden = !show; $('#chordNameBox').hidden = show; $('#chordQSeg').hidden = !show;
+    show ? renderChordShow() : renderIdentify();
+  } else if (S.tab === 'scales') renderScale();
+  else {
+    const isInt = S.earType === 'intervals';
+    $('#intBox').hidden = !isInt; $('#melBox').hidden = isInt;
+    isInt ? renderInt() : renderMel();
+  }
+}
+
+/* ---------- chords: show ---------- */
+const INV_ORDER = [[0,1,2],[1,2,0],[2,0,1]];
+function chordMidis(){
+  const base = CHORD[S.chordQ].map(([, s]) => LOW + S.chordRoot + s);
+  let ms = INV_ORDER[S.chordInv].map((i, k) => base[i] + (k > 0 && i < INV_ORDER[S.chordInv][0] ? 12 : 0));
+  if (Math.max(...ms) > HIGH) ms = ms.map(m => m - 12);
+  return ms;
+}
+function playChord(ms){
+  cancelAll();
+  ms.forEach((m, i) => playNote(m, 1.0, 0.9, i * 0.22));
+  ms.forEach(m => playNote(m, 1.9, 0.7, ms.length * 0.22 + 0.25));
+}
+function renderChordShow(){
+  clearKeys();
+  const names = rootNames(S.chordQ);
+  renderRoots($('#chordRoots'), names, S.chordRoot, pc => { S.chordRoot = pc; save(); renderChordShow(); playChord(chordMidis()); });
+  const root = names[S.chordRoot], notes = spell(root, CHORD[S.chordQ]), ms = chordMidis(), order = INV_ORDER[S.chordInv];
+  ms.forEach((m, k) => setKey(m, order[k] === 0 ? 'hl root' : 'hl', pretty(notes[order[k]])));
+  $('#chordName').textContent = pretty(root) + ' ' + S.chordQ;
+  $('#chordNotes').textContent = order.map(i => pretty(notes[i])).join(' ');
+  scrollToKeys(ms);
+}
+$('#chordPlay').addEventListener('click', () => playChord(chordMidis()));
+
+/* ---------- chords: name ---------- */
+const sel = new Set();
+function identify(ms){
+  const pcs = [...new Set(ms.map(m => m % 12))];
+  if (!ms.length) return { name:'', notes:'Tap three keys on the keyboard.' };
+  if (pcs.length < 3){ const n = 3 - pcs.length; return { name:'', notes:`Add ${n} more note${n > 1 ? 's' : ''}.` }; }
+  if (pcs.length > 3) return { name:'No match', notes:'Use three different notes for a major or minor chord.' };
+  for (const r of pcs){
+    for (const q of ['major','minor']){
+      const want = CHORD[q].map(([, s]) => (r + s) % 12);
+      if (want.every(p => pcs.includes(p))){
+        const root = rootNames(q)[r], spelled = spell(root, CHORD[q]);
+        const byPc = {}; want.forEach((p, i) => byPc[p] = pretty(spelled[i]));
+        const bass = Math.min(...ms) % 12;
+        const inv = bass === want[0] ? 'Root position' : bass === want[1] ? '1st inversion' : '2nd inversion';
+        return { name: pretty(root) + ' ' + q, notes: spelled.map(pretty).join(' '), inv, byPc, rootPc: r };
+      }
+    }
+  }
+  return { name:'No match', notes:'These notes aren’t a major or minor chord.' };
+}
+function renderIdentify(){
+  clearKeys();
+  const ms = [...sel].sort((a, b) => a - b), r = identify(ms);
+  ms.forEach(m => setKey(m, 'sel' + (r.byPc && m % 12 === r.rootPc ? ' hl root' : ''), r.byPc ? r.byPc[m % 12] : noteName(m)));
+  $('#idName').textContent = r.name; $('#idNotes').textContent = r.notes; $('#idInv').textContent = r.inv || '';
+}
+$('#idPlay').addEventListener('click', () => { const ms = [...sel].sort((a, b) => a - b); if (ms.length) playChord(ms); });
+$('#idClear').addEventListener('click', () => { sel.clear(); renderIdentify(); });
+
+/* ---------- scales ---------- */
+const scaleMidis = () => SCALE[S.scaleQ].map(s => LOW + S.scaleRoot + s);
+function playScale(){
+  cancelAll();
+  scaleMidis().forEach((m, i) => { playNote(m, 0.9, 1, i * 0.34); at(i * 0.34, () => flash(m, 'down', 260)); });
+}
+function renderScale(){
+  clearKeys();
+  const names = rootNames(S.scaleQ);
+  renderRoots($('#scaleRoots'), names, S.scaleRoot, pc => { S.scaleRoot = pc; save(); renderScale(); });
+  const root = names[S.scaleRoot], notes = spell(root, scaleSteps(S.scaleQ)), ms = scaleMidis();
+  ms.forEach((m, i) => setKey(m, i === 0 || i === 7 ? 'hl root' : 'hl', pretty(notes[i])));
+  $('#scaleName').textContent = pretty(root) + ' ' + S.scaleQ + ' scale';
+  $('#scaleNotes').textContent = notes.map(pretty).join(' ');
+  scrollToKeys(ms);
+}
+$('#scalePlay').addEventListener('click', playScale);
+
+/* ---------- ear training: intervals ---------- */
+const INT = [null,'Minor 2nd','Major 2nd','Minor 3rd','Major 3rd','Perfect 4th','Tritone','Perfect 5th','Minor 6th','Major 6th','Minor 7th','Major 7th','Octave'];
+const INT_BASIC = [2,4,5,7,12];
+const INT_ALL = [1,2,3,4,5,6,7,8,9,10,11,12];
+const HINT_UP = {1:'the Jaws theme',2:'Happy Birthday',3:'Greensleeves',4:'When the Saints Go Marching In',5:'Here Comes the Bride',6:'The Simpsons theme',7:'Twinkle, Twinkle, Little Star',8:'The Entertainer',9:'My Bonnie Lies Over the Ocean',10:'Somewhere (West Side Story)',11:'Take On Me (chorus)',12:'Somewhere Over the Rainbow'};
+const HINT_DOWN = {1:'Für Elise',2:'Mary Had a Little Lamb',3:'Hey Jude',4:'Swing Low, Sweet Chariot',5:'Eine kleine Nachtmusik',7:'The Flintstones theme'};
+const iv = { a:null, b:null, s:0, status:'idle', wrong:new Set(), lastS:0 };
+const intPool = () => S.intSet === 'basic' ? INT_BASIC : INT_ALL;
+const intMsg = t => $('#intMsg').textContent = t;
+function resetInt(){ cancelAll(); iv.a = iv.b = null; iv.s = 0; iv.status = 'idle'; iv.wrong.clear(); }
+function intBase(){
+  clearKeys();
+  if (S.intMode === 'play' && iv.a !== null && iv.status !== 'done') setKey(iv.a, 'start', noteName(iv.a));
+}
+function renderAnswers(){
+  const box = $('#intAnswers');
+  box.hidden = S.intMode !== 'name';
+  box.innerHTML = '';
+  intPool().forEach(s => {
+    const b = document.createElement('button');
+    b.className = 'ans' + (iv.status === 'done' && s === iv.s ? ' right' : iv.wrong.has(s) ? ' wrong' : '');
+    b.textContent = INT[s];
+    b.addEventListener('click', () => intAnswer(s));
+    box.appendChild(b);
+  });
+}
+function renderInt(){
+  renderAnswers(); intBase();
+  $('#intAgain').disabled = $('#intReveal').disabled = !iv.s;
+  if (iv.status === 'idle'){
+    setVerdict($('#intVerdict'), ''); $('#intName').textContent = '';
+    intMsg(S.intMode === 'name' ? 'Tap New interval, listen, then pick its name.' : 'Tap New interval, listen, then play the second note.');
+  } else if (iv.status === 'done') showIntResult();
+}
+function newInterval(){
+  const pool = intPool();
+  let s; do { s = pick(pool); } while (pool.length > 1 && s === iv.lastS);
+  iv.lastS = s;
+  const dir = S.intDir === 'mixed' ? pick(['up','down']) : S.intDir;
+  const span = HIGH - LOW - s;
+  if (dir === 'up'){ iv.a = LOW + rand(0, span); iv.b = iv.a + s; }
+  else { iv.a = LOW + s + rand(0, span); iv.b = iv.a - s; }
+  iv.s = s; iv.wrong.clear();
+  playInterval();
+}
+function playInterval(){
+  cancelAll();
+  iv.status = 'playing';
+  setVerdict($('#intVerdict'), ''); $('#intName').textContent = ''; intMsg('Listen…');
+  renderAnswers(); intBase();
+  $('#intAgain').disabled = $('#intReveal').disabled = false;
+  playNote(iv.a, 1.1, 1, 0); playNote(iv.b, 1.4, 1, 0.75);
+  at(1.5, () => { iv.status = 'answer'; intMsg(S.intMode === 'name' ? 'Which interval was it?' : 'Play the second note.'); });
+}
+function showIntResult(){
+  clearKeys();
+  setKey(iv.a, 'hl', noteName(iv.a)); setKey(iv.b, 'hl root', noteName(iv.b));
+  scrollToKeys([iv.a, iv.b]);
+  const up = iv.b > iv.a;
+  $('#intName').textContent = INT[iv.s] + (up ? ' ↑' : ' ↓');
+  const h = (up ? HINT_UP : HINT_DOWN)[iv.s];
+  intMsg(h ? `Think of ${h}.` : 'Tap New interval for the next one.');
+  renderAnswers();
+}
+function intDone(correct){ iv.status = 'done'; setVerdict($('#intVerdict'), correct ? 'ok' : ''); showIntResult(); }
+function intAnswer(s){
+  if (iv.status !== 'answer') return;
+  if (s === iv.s) intDone(true);
+  else { iv.wrong.add(s); setVerdict($('#intVerdict'), 'bad'); intMsg('Not quite. Listen again or pick another.'); renderAnswers(); }
+}
+function intKey(m){
+  if (S.intMode !== 'play' || iv.status !== 'answer' || m === iv.a) return;
+  if (m === iv.b){ flash(m, 'ok'); intDone(true); }
+  else {
+    flash(m, 'bad'); setVerdict($('#intVerdict'), 'bad');
+    intMsg(m % 12 === iv.b % 12 ? 'Right note, wrong octave.' : 'Not quite. Try another key.');
+  }
+}
+$('#intNew').addEventListener('click', newInterval);
+$('#intAgain').addEventListener('click', () => { if (iv.s){ if (iv.status === 'done'){ playNote(iv.a, 1.1, 1, 0); playNote(iv.b, 1.4, 1, 0.75); } else playInterval(); } });
+$('#intReveal').addEventListener('click', () => { if (!iv.s) return; cancelAll(); intDone(false); playNote(iv.a, 1.1, 1, 0); playNote(iv.b, 1.4, 1, 0.75); });
+
+/* ---------- ear training: melodies ---------- */
+const SONGS = [
+  { n:'Hot Cross Buns', d:[2,1,0] },
+  { n:'Mary Had a Little Lamb', d:[2,1,0,1] },
+  { n:'Frère Jacques', d:[0,1,2,0] },
+  { n:'When the Saints Go Marching In', d:[0,2,3,4] },
+  { n:'Ode to Joy', d:[2,2,3,4] },
+  { n:'Twinkle, Twinkle, Little Star', d:[0,0,4,4] },
+  { n:'Happy Birthday', d:[4,4,5,4] },
+  { n:'London Bridge', d:[4,5,4,3] }
+];
+const POOLS = { 1:[0,1,2], 2:[0,1,2,3,4], 3:[0,1,2,3,4,5,6,7] };
+const mel = { deg:[], mid:[], song:null, pos:0, status:'idle', last:'' };
+const tonic = () => LOW + S.melRoot;
+const melMsg = t => $('#melMsg').textContent = t;
+const degLabel = d => String(d + 1);
+function melNames(){ return spell(rootNames(S.melQ)[S.melRoot], scaleSteps(S.melQ)).map(pretty); }
+
+(function buildKeySelect(){
+  const selEl = $('#melKey');
+  ['major','minor'].forEach(q => {
+    const g = document.createElement('optgroup'); g.label = q === 'major' ? 'Major' : 'Minor';
+    rootNames(q).forEach((n, pc) => { const o = document.createElement('option'); o.value = pc + ':' + q; o.textContent = pretty(n) + ' ' + q; g.appendChild(o); });
+    selEl.appendChild(g);
+  });
+  selEl.addEventListener('change', () => { const [pc, q] = selEl.value.split(':'); S.melRoot = +pc; S.melQ = q; save(); resetMel(); renderMel(); });
+})();
+
+function randomDegrees(n, pool){
+  const big = pool.length > 5;
+  const moves = big ? [-2,-1,-1,0,1,1,2,-4,4] : [-2,-1,-1,0,1,1,2];
+  const starts = [0,2,4,7].filter(d => pool.includes(d));
+  for (let attempt = 0; attempt < 50; attempt++){
+    let d = pick(starts); const out = [d]; let guard = 0;
+    while (out.length < n && guard++ < 100){
+      const mv = pick(moves), nd = d + mv;
+      if (!pool.includes(nd)) continue;
+      if (mv === 0 && out.length > 1 && out[out.length - 1] === out[out.length - 2]) continue;
+      d = nd; out.push(d);
+    }
+    if (out.length === n && new Set(out).size > 1) return out;
+  }
+  return [0,1,2,1].slice(0, n);
+}
+function genMelody(n){
+  const pool = POOLS[S.melRange];
+  if (S.melQ === 'major' && Math.random() < 0.35){
+    const c = SONGS.filter(s => s.d.length >= n && s.n !== mel.last && s.d.slice(0, n).every(d => pool.includes(d)));
+    if (c.length){ const s = pick(c); mel.last = s.n; return { deg: s.d.slice(0, n), song: s.n }; }
+  }
+  mel.last = '';
+  return { deg: randomDegrees(n, pool), song: null };
+}
+function resetMel(){ cancelAll(); mel.deg = []; mel.mid = []; mel.song = null; mel.pos = 0; mel.status = 'idle'; }
+function melBase(){
+  clearKeys();
+  const t = tonic(), pcs = SCALE[S.melQ].slice(0, 7).map(s => (S.melRoot + s) % 12);
+  if (S.melScale){
+    for (let m = LOW; m <= HIGH; m++){
+      if (!pcs.includes(m % 12)) continue;
+      keyEl[m].classList.add('inscale');
+      const d = SCALE[S.melQ].indexOf(m - t);
+      if (d >= 0) setLabel(m, degLabel(d), true);
+    }
+  }
+  if (S.melFirst && mel.mid.length && mel.status !== 'done') setKey(mel.mid[0], 'start', degLabel(mel.deg[0]));
+}
+function renderDots(bad = -1){
+  const d = $('#melDots'); d.innerHTML = '';
+  mel.mid.forEach((_, i) => { const s = document.createElement('span'); s.className = 'dot' + (i < mel.pos ? ' on' : '') + (i === bad ? ' bad' : ''); d.appendChild(s); });
+}
+function renderMel(){
+  $('#melKey').value = S.melRoot + ':' + S.melQ;
+  $('#melFirst').checked = !!S.melFirst; $('#melScale').checked = !!S.melScale;
+  $('#melAgain').disabled = $('#melReveal').disabled = !mel.mid.length;
+  renderDots(); melBase();
+  scrollToKeys([tonic(), tonic() + 12]);
+  if (mel.status === 'idle'){
+    setVerdict($('#melVerdict'), ''); $('#melDeg').textContent = ''; $('#melNotes').textContent = '';
+    melMsg('Tap New melody. You’ll hear the key first, then the melody.');
+  } else if (mel.status === 'done') showMelResult();
+  else melMsg('Play it back on the keys.');
+}
+function cadence(start){
+  const t = tonic(), maj = S.melQ === 'major', third = maj ? 4 : 3, sixth = maj ? 9 : 8;
+  const chords = [[t, t + third, t + 7], [t, t + 5, t + sixth], [t - 1, t + 2, t + 7], [t, t + third, t + 7]];
+  const bass = [t - 12, t - 7, t - 5, t - 12];
+  chords.forEach((c, i) => [...c, bass[i]].forEach(m => playNote(m, i === 3 ? 1.3 : 0.65, 0.5, start + i * 0.6)));
+  return start + 4 * 0.6 + 0.6;
+}
+function playMelody(withKey){
+  cancelAll();
+  mel.status = 'playing'; mel.pos = 0;
+  setVerdict($('#melVerdict'), ''); $('#melDeg').textContent = ''; $('#melNotes').textContent = '';
+  renderDots(); melBase();
+  $('#melAgain').disabled = $('#melReveal').disabled = false;
+  let s = 0;
+  if (withKey){ melMsg('Listen to the key…'); s = cadence(0); at(s - 0.2, () => melMsg('Now the melody…')); }
+  else melMsg('Listen…');
+  mel.mid.forEach((m, i) => playNote(m, 0.9, 1, s + i * 0.6));
+  at(s + mel.mid.length * 0.6 + 0.1, () => { mel.status = 'input'; melMsg('Now play it back.'); });
+}
+function showMelResult(){
+  clearKeys(); if (S.melScale) melBase();
+  mel.mid.forEach(m => setKey(m, 'hl', degLabel(mel.deg[mel.mid.indexOf(m)])));
+  const names = melNames();
+  $('#melDeg').textContent = mel.deg.map(degLabel).join(' ');
+  $('#melNotes').textContent = mel.deg.map(d => names[d]).join(' ');
+}
+function melKey(m){
+  if (mel.status === 'idle'){ melMsg('Tap New melody to start.'); return; }
+  if (mel.status !== 'input') return;
+  const want = mel.mid[mel.pos];
+  if (m === want){
+    flash(m, 'ok'); mel.pos++; setVerdict($('#melVerdict'), ''); renderDots();
+    if (mel.pos === mel.mid.length){
+      mel.status = 'done'; setVerdict($('#melVerdict'), 'ok'); showMelResult();
+      melMsg(mel.song ? `That’s the opening of ${mel.song}.` : 'Tap New melody for the next one.');
+    }
+  } else {
+    flash(m, 'bad'); setVerdict($('#melVerdict'), 'bad'); renderDots(mel.pos);
+    mel.status = 'wait';
+    melMsg(m % 12 === want % 12 ? 'Right note, wrong octave. Start again.' : 'Not quite. Start again from the first note.');
+    at(0.7, () => { mel.pos = 0; renderDots(); mel.status = 'input'; });
+  }
+}
+function revealMelody(){
+  if (!mel.mid.length) return;
+  cancelAll();
+  mel.status = 'playing'; mel.pos = 0;
+  setVerdict($('#melVerdict'), ''); renderDots();
+  const keepFirst = S.melFirst; S.melFirst = false; melBase(); S.melFirst = keepFirst;
+  mel.mid.forEach((m, i) => { playNote(m, 0.9, 1, i * 0.6); at(i * 0.6, () => setKey(m, 'hl', degLabel(mel.deg[i]))); });
+  at(mel.mid.length * 0.6 + 0.1, () => {
+    mel.status = 'input';
+    const names = melNames();
+    $('#melDeg').textContent = mel.deg.map(degLabel).join(' ');
+    $('#melNotes').textContent = mel.deg.map(d => names[d]).join(' ');
+    melMsg((mel.song ? mel.song + '. ' : '') + 'Now play it back.');
+  });
+}
+$('#melNew').addEventListener('click', () => {
+  const g = genMelody(S.earLen);
+  mel.deg = g.deg; mel.song = g.song; mel.mid = g.deg.map(d => tonic() + SCALE[S.melQ][d]);
+  playMelody(true);
+});
+$('#melAgain').addEventListener('click', () => { if (!mel.mid.length) return; if (mel.status === 'done') mel.mid.forEach((m, i) => playNote(m, 0.9, 1, i * 0.6)); else playMelody(false); });
+$('#melHearKey').addEventListener('click', () => { if (mel.status === 'playing') return; cadence(0); });
+$('#melReveal').addEventListener('click', revealMelody);
+$('#melFirst').addEventListener('change', e => { S.melFirst = e.target.checked; save(); if (mel.status !== 'playing') mel.status === 'done' ? showMelResult() : melBase(); });
+$('#melScale').addEventListener('change', e => { S.melScale = e.target.checked; save(); if (mel.status !== 'playing') mel.status === 'done' ? showMelResult() : melBase(); });
+
+renderView();
+
+/* ---------- offline support when hosted (e.g. GitHub Pages) ---------- */
+if ('serviceWorker' in navigator && location.protocol === 'https:' && !/claude/.test(location.hostname)){
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+})();
+</script>
+</body>
+</html>
